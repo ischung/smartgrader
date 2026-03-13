@@ -132,7 +132,9 @@ uvicorn main:app --reload
    | `SUPABASE_URL` | `https://xxxx.supabase.co` | Supabase → Settings → API → Project URL |
    | `SUPABASE_SERVICE_ROLE_KEY` | `eyJ...` | Supabase → Settings → API → service_role key |
    | `SUPABASE_ANON_KEY` | `eyJ...` | Supabase → Settings → API → anon key |
-   | `ALLOWED_ORIGINS` | _(일단 `http://localhost:3000` 입력, Vercel URL 확인 후 수정)_ | — |
+   | `ALLOWED_ORIGINS` | `https://smartgrader.vercel.app,http://localhost:3000` | Vercel URL은 `https://[프로젝트명].vercel.app` 형식으로 미리 예측 가능 |
+
+   > **팁**: Vercel 프로젝트명을 `smartgrader`로 지정하면 URL은 `https://smartgrader.vercel.app`이 됩니다. 이 값을 미리 입력하면 나중에 수정할 필요가 없습니다. 프로젝트명이 다를 경우 2단계 완료 후 실제 URL로 업데이트하세요.
 
 5. **Create Web Service** 클릭 → 배포 완료까지 약 2~5분 대기
 6. 배포 완료 후 상단에 표시되는 URL 복사:
