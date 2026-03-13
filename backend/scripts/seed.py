@@ -17,16 +17,15 @@ import os
 import sys
 from pathlib import Path
 
-# backend/ 디렉토리를 경로에 추가
-sys.path.insert(0, str(Path(__file__).parent.parent))
+import dotenv
 
-from dotenv import load_dotenv
-load_dotenv()
+dotenv.load_dotenv(Path(__file__).parent.parent / ".env")
 
-from supabase import create_client
+from supabase import create_client  # noqa: E402
 
 ADMIN_EMAIL = "admin@smartgrader.local"
 ADMIN_PASSWORD = "insang"
+
 
 def main():
     url = os.getenv("SUPABASE_URL")
@@ -45,18 +44,19 @@ def main():
         return
 
     # Supabase Auth에 계정 생성 → 트리거가 public.users 자동 삽입
-    print(f"⏳ {ADMIN_EMAIL} 계정 생성 중...")
+    print("⏳ admin@smartgrader.local 계정 생성 중...")
     result = client.auth.admin.create_user({
         "email": ADMIN_EMAIL,
         "password": ADMIN_PASSWORD,
         "email_confirm": True,
     })
 
-    print(f"✅ 관리자 계정 생성 완료!")
-    print(f"   Auth UID : {result.user.id}")
-    print(f"   login_id : 110509")
-    print(f"   role     : admin")
-    print(f"   초기 PW  : {ADMIN_PASSWORD}")
+    print("✅ 관리자 계정 생성 완료!")
+    print("   Auth UID : " + result.user.id)
+    print("   login_id : 110509")
+    print("   role     : admin")
+    print("   초기 PW  : " + ADMIN_PASSWORD)
+
 
 if __name__ == "__main__":
     main()
