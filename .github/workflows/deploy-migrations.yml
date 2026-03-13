@@ -6,8 +6,9 @@
 # 필요한 GitHub Secret (Settings → Secrets and variables → Actions):
 #   SUPABASE_DB_URL:
 #     Supabase 대시보드 → Settings → Database → Connection string
-#     → URI 탭 → Session mode (포트 5432) 복사
+#     → "Session mode" (Pooler) 탭 복사 — 포트 5432, 호스트 aws-0-*.pooler.supabase.com
 #     형식: postgres://postgres.[project-ref]:[password]@aws-0-[region].pooler.supabase.com:5432/postgres
+#     ⚠️ Direct connection(db.*.supabase.co) 사용 금지 — GitHub Actions는 IPv6 미지원
 #     ⚠️ Transaction mode(포트 6543) 사용 금지 — DDL은 세션 유지 필요
 # ============================================================
 name: Deploy — Supabase DB Migrations
