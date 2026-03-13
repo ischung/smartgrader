@@ -30,9 +30,21 @@ def get_current_user(
 
 
 def require_role(*roles: str):
-    """역할 기반 접근 제어 팩토리"""
+    """역할 기반 접근 제어 팩토리
+
+    admin은 student 전용 엔드포인트를 제외한 모든 엔드포인트에 접근 가능.
+    사용 예:
+        require_role("professor")          → professor + admin 허용
+        require_role("student")            → student 만 허용
+        require_role("admin")              → admin 만 허용
+        require_role("professor", "admin") → professor + admin 허용 (명시적)
+    """
     def checker(current_user: dict = Depends(get_current_user)):
-        if current_user["role"] not in roles:
+        user_role = current_user["role"]
+        # admin은 student 전용이 아닌 경우 모두 허용
+        if user_role == "admin" and "student" not in roles:
+            return current_user
+        if user_role not in roles:
             raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="접근 권한이 없습니다.")
         return current_user
     return checker
