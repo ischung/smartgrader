@@ -2,6 +2,7 @@ import uuid
 from fastapi import APIRouter, Depends, File, HTTPException, UploadFile, status
 from utils.deps import require_role
 from utils.file_parser import ALLOWED_EXTENSIONS, MAX_FILE_SIZE, parse_grade_file
+from utils.student_provisioner import provision_students
 from utils.supabase_client import get_admin_client
 
 router = APIRouter()
@@ -62,6 +63,9 @@ async def upload_grade_file(
         "storage_path": storage_path,
     }).execute()
 
+    # 학생 계정 자동 생성
+    provisioning = provision_students(parsed["student_ids"], admin)
+
     return {
         "storage_path": storage_path,
         "filename": filename,
@@ -69,4 +73,5 @@ async def upload_grade_file(
         "preview": parsed["preview"],
         "total_rows": parsed["total_rows"],
         "extracted": parsed["extracted"],
+        "students": provisioning,
     }

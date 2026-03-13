@@ -38,12 +38,14 @@ def parse_grade_file(content: bytes, filename: str) -> dict:
     total_rows = len(df)
 
     extracted = _extract_course_info(df, columns)
+    student_ids = extract_student_ids(df, columns)
 
     return {
         "columns": [str(c) for c in columns],
         "preview": [[str(v) for v in row] for row in preview],
         "total_rows": total_rows,
         "extracted": extracted,
+        "student_ids": student_ids,
     }
 
 
@@ -85,3 +87,21 @@ def _extract_course_info(df: pd.DataFrame, columns: list) -> dict:
                 break
 
     return result
+
+
+# 학번 컬럼 키워드
+_STUDENT_ID_KEYWORDS = ["학번", "student_id", "studentid", "student_number", "학생번호"]
+
+
+def extract_student_ids(df: "pd.DataFrame", columns: list) -> list[str]:
+    """
+    DataFrame에서 학번 컬럼을 찾아 고유 학번 목록을 반환한다.
+    학번 컬럼을 찾지 못하면 빈 리스트를 반환한다.
+    """
+    lower_cols = {str(c).lower(): str(c) for c in columns}
+    for kw in _STUDENT_ID_KEYWORDS:
+        if kw.lower() in lower_cols:
+            col = lower_cols[kw.lower()]
+            ids = df[col].dropna().astype(str).str.strip()
+            return list(ids[ids != ""].unique())
+    return []
