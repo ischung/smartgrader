@@ -25,10 +25,10 @@ export default function LoginPage() {
       if (!res.ok) throw new Error('아이디 또는 비밀번호가 올바르지 않아요.')
 
       const data = await res.json()
-      setAuth(data.data.user, data.data.role, data.data.token)
+      setAuth(data.user, data.role, data.token)
 
-      if (data.data.role === 'admin') navigate('/admin')
-      else if (data.data.role === 'professor') navigate('/professor')
+      if (data.role === 'admin') navigate('/admin')
+      else if (data.role === 'professor') navigate('/professor')
       else navigate('/student')
     } catch (err) {
       setError(`앗, ${err.message}`)
