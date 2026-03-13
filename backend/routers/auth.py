@@ -1,5 +1,6 @@
-from fastapi import APIRouter, HTTPException, status
-from models.auth import LoginRequest, LoginResponse
+from fastapi import APIRouter, Depends, HTTPException, status
+from models.auth import LoginRequest, LoginResponse, PasswordChangeRequest
+from utils.deps import get_current_user
 from utils.supabase_client import get_admin_client, get_anon_client
 
 router = APIRouter()
@@ -47,5 +48,32 @@ def login(body: LoginRequest):
 @router.post("/logout", status_code=status.HTTP_204_NO_CONTENT)
 def logout():
     # 클라이언트 측 토큰 삭제로 충분 (Supabase JWT는 stateless)
-    # 필요 시 서버 측 세션 무효화: anon.auth.sign_out()
+    return
+
+
+@router.patch("/password", status_code=status.HTTP_204_NO_CONTENT)
+def change_password(
+    body: PasswordChangeRequest,
+    current_user: dict = Depends(get_current_user),
+):
+    admin = get_admin_client()
+    anon = get_anon_client()
+
+    # 1. 현재 PW 확인 — 실제로 로그인 시도
+    auth_user = admin.auth.admin.get_user_by_id(current_user["id"])
+    if not auth_user or not auth_user.user:
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="사용자 정보를 찾을 수 없습니다.")
+
+    email = auth_user.user.email
+    try:
+        anon.auth.sign_in_with_password({"email": email, "password": body.current_password})
+    except Exception:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="현재 비밀번호가 올바르지 않아요.")
+
+    # 2. 새 PW로 업데이트
+    try:
+        admin.auth.admin.update_user_by_id(current_user["id"], {"password": body.new_password})
+    except Exception:
+        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="비밀번호 변경에 실패했습니다.")
+
     return
