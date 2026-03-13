@@ -1,0 +1,32 @@
+# 환경변수
+.env
+.env.local
+frontend/.env
+backend/.env
+
+# Node
+node_modules/
+frontend/node_modules/
+frontend/dist/
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+.venv/
+venv/
+backend/.venv/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+
+# OS
+.DS_Store
+Thumbs.db
+
+# 테스트 커버리지
+coverage/
+.coverage
+htmlcov/
