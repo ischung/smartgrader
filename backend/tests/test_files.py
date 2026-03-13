@@ -5,7 +5,7 @@ import io
 import pandas as pd
 from fastapi.testclient import TestClient
 from main import app
-from utils.file_parser import parse_grade_file, ALLOWED_EXTENSIONS, MAX_FILE_SIZE
+from utils.file_parser import parse_grade_file, extract_student_ids, ALLOWED_EXTENSIONS, MAX_FILE_SIZE
 
 client = TestClient(app)
 
@@ -71,3 +71,30 @@ def test_extract_course_info():
     assert result["extracted"]["course_code"] == "CS202"
     assert result["extracted"]["section"] == "B"
     assert result["extracted"]["semester"] == "2026-2"
+
+
+def test_extract_student_ids_csv():
+    """CSV에서 학번 추출 테스트"""
+    csv_content = "과목명,학번,점수\n소프트웨어공학,20210001,85\n소프트웨어공학,20210002,90\n"
+    result = parse_grade_file(csv_content.encode("utf-8-sig"), "test.csv")
+    assert "20210001" in result["student_ids"]
+    assert "20210002" in result["student_ids"]
+    assert len(result["student_ids"]) == 2
+
+
+def test_extract_student_ids_dedup():
+    """중복 학번은 1개만 반환되어야 한다"""
+    df = pd.DataFrame({
+        "학번": ["20210001", "20210001", "20210002"],
+        "점수": [85, 90, 78],
+    })
+    ids = extract_student_ids(df, df.columns.tolist())
+    assert ids.count("20210001") == 1
+    assert "20210002" in ids
+
+
+def test_extract_student_ids_no_column():
+    """학번 컬럼이 없으면 빈 리스트를 반환한다"""
+    df = pd.DataFrame({"과목명": ["소프트웨어공학"], "점수": [85]})
+    ids = extract_student_ids(df, df.columns.tolist())
+    assert ids == []
