@@ -3,7 +3,7 @@ import os
 from dotenv import load_dotenv
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from routers import auth, users
+from routers import auth, courses, users
 
 load_dotenv()
 
@@ -26,6 +26,7 @@ app.add_middleware(
 
 app.include_router(auth.router, prefix="/api/v1/auth", tags=["Auth"])
 app.include_router(users.router, prefix="/api/v1/users", tags=["Users"])
+app.include_router(courses.router, prefix="/api/v1/courses", tags=["Courses"])
 
 # 이후 이슈에서 순차적으로 추가
 # app.include_router(courses.router, prefix="/api/v1/courses", tags=["Courses"])
