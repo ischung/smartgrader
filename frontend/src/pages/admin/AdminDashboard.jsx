@@ -2,7 +2,7 @@ import { useNavigate } from 'react-router-dom'
 import useAuthStore from '../../store/authStore'
 
 export default function AdminDashboard() {
-  const { user, clearAuth } = useAuthStore()
+  const { clearAuth } = useAuthStore()
   const navigate = useNavigate()
 
   return (
