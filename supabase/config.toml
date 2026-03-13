@@ -1,0 +1,35 @@
+# Supabase CLI 프로젝트 설정
+# supabase link --project-ref <PROJECT_REF> 실행 시 project_id가 자동으로 채워집니다.
+# CI/CD에서는 --db-url 플래그로 직접 연결하므로 project_id 없이도 db push 가능합니다.
+
+[api]
+enabled = true
+port = 54321
+schemas = ["public", "storage", "graphql_public"]
+extra_search_path = ["public", "extensions"]
+max_rows = 1000
+
+[db]
+port = 54322
+shadow_port = 54320
+major_version = 15
+
+[studio]
+enabled = true
+port = 54323
+
+[inbucket]
+enabled = true
+port = 54324
+
+[auth]
+enabled = true
+site_url = "http://localhost:3000"
+additional_redirect_urls = []
+jwt_expiry = 3600
+enable_signup = true
+
+[auth.email]
+enable_signup = true
+double_confirm_changes = true
+enable_confirmations = false
