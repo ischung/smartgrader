@@ -35,3 +35,18 @@ def test_protected_without_token():
     """토큰 없이 보호된 API 호출 시 403 반환"""
     response = client.get("/api/v1/users/me")
     assert response.status_code in (401, 403, 404)
+
+
+def test_change_password_without_token():
+    """토큰 없이 비밀번호 변경 시 403 반환"""
+    response = client.patch(
+        "/api/v1/auth/password",
+        json={"current_password": "old", "new_password": "new"},
+    )
+    assert response.status_code == 403
+
+
+def test_change_password_missing_fields():
+    """토큰 없이 필드 누락 시 403 반환 (인증이 스키마 검증보다 먼저)"""
+    response = client.patch("/api/v1/auth/password", json={})
+    assert response.status_code == 403
