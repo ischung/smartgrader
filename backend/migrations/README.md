@@ -6,8 +6,9 @@ Supabase 대시보드 → **SQL Editor** 에서 아래 순서대로 실행합니
 
 | 순서 | 파일 | 내용 |
 |------|------|------|
-| 1 | `001_initial_schema.sql` | 8개 테이블 + 인덱스 + RLS 정책 생성 |
+| 1 | `001_initial_schema.sql` | 8개 테이블 + 인덱스 + DB RLS 정책 생성 |
 | 2 | `002_seed_admin.sql` | 관리자 계정 초기 데이터 삽입 |
+| 3 | `003_storage_rls.sql` | Storage 버킷 생성 + Storage RLS 정책 |
 
 ## 002_seed_admin.sql 적용 전 준비
 
@@ -31,16 +32,20 @@ Supabase 대시보드 → **SQL Editor** 에서 아래 순서대로 실행합니
 
 ## Supabase Storage 버킷 설정
 
-SQL Editor 적용 후 아래 버킷을 수동으로 생성합니다:
+`003_storage_rls.sql`이 자동으로 버킷을 생성합니다. 또는 대시보드에서 수동 생성:
 
 1. Supabase 대시보드 → **Storage → New bucket**
 2. 버킷명: `grade-files`
 3. Public: **OFF** (비공개)
 
+파일 경로 구조: `grade-files/{course_id}/{original|result}/{filename}`
+
 ## RLS 정책 요약
 
-| 역할 | 권한 |
-|------|------|
-| admin | 전체 테이블 CRUD |
-| professor | 본인 담당 과목의 데이터 CRUD |
-| student | 본인 점수·결과 SELECT만 가능 |
+| 역할 | DB 테이블 | Storage |
+|------|-----------|---------|
+| admin | 전체 CRUD | 전체 조회·삭제 |
+| professor | 본인 담당 과목 CRUD | 본인 과목 폴더 업로드·조회·삭제 |
+| student | 본인 점수·결과 SELECT | 접근 불가 (403) |
+
+> 상세 정책은 `rls_policies.sql` 참조
