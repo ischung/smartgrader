@@ -1,7 +1,9 @@
+import os
+
+from dotenv import load_dotenv
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from dotenv import load_dotenv
-import os
+from routers import auth
 
 load_dotenv()
 
@@ -22,9 +24,9 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# 라우터 등록 (이후 이슈에서 순차적으로 추가)
-# from routers import auth, users, courses, grade_items, scores, student
-# app.include_router(auth.router, prefix="/api/v1/auth", tags=["Auth"])
+app.include_router(auth.router, prefix="/api/v1/auth", tags=["Auth"])
+
+# 이후 이슈에서 순차적으로 추가
 # app.include_router(users.router, prefix="/api/v1/users", tags=["Users"])
 # app.include_router(courses.router, prefix="/api/v1/courses", tags=["Courses"])
 # app.include_router(student.router, prefix="/api/v1/student", tags=["Student"])
