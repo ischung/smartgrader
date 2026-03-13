@@ -1,0 +1,90 @@
+# ============================================================
+# SmartGrader CI 파이프라인
+#
+# 트리거: PR 생성/업데이트 시 자동 실행 (main 대상 PR)
+# 단계: Frontend(lint → build) + Backend(lint → test) 병렬 실행
+#
+# Vercel / Render 배포:
+#   별도 설정 없이 각 플랫폼의 GitHub 연동으로 자동 처리됨
+#   - Vercel: main merge 시 프로덕션 자동 배포
+#   - Render: main merge 시 서비스 자동 재배포
+# ============================================================
+name: CI
+
+on:
+  pull_request:
+    branches:
+      - main
+  push:
+    branches:
+      - main
+
+jobs:
+  # ──────────────────────────────────────────────────────────
+  # Frontend: ESLint → Vite Build
+  # ──────────────────────────────────────────────────────────
+  frontend:
+    name: Frontend — Lint & Build
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: frontend
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Lint (ESLint)
+        run: npm run lint
+
+      - name: Build (Vite)
+        run: npm run build
+        env:
+          # 빌드 시 환경변수 플레이스홀더 (실제 값은 Vercel 대시보드에서 설정)
+          VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL || 'https://placeholder.supabase.co' }}
+          VITE_SUPABASE_ANON_KEY: ${{ secrets.VITE_SUPABASE_ANON_KEY || 'placeholder-key' }}
+          VITE_API_URL: ${{ secrets.VITE_API_URL || 'https://placeholder.onrender.com' }}
+
+  # ──────────────────────────────────────────────────────────
+  # Backend: ruff lint → pytest
+  # ──────────────────────────────────────────────────────────
+  backend:
+    name: Backend — Lint & Test
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: backend
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: 'pip'
+          cache-dependency-path: backend/requirements.txt
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Lint (ruff)
+        run: ruff check .
+
+      - name: Test (pytest)
+        run: pytest tests/ -v
+        env:
+          # 테스트용 더미 환경변수 (실제 DB 연결 없이 API 구조 검증)
+          SUPABASE_URL: https://placeholder.supabase.co
+          SUPABASE_SERVICE_ROLE_KEY: placeholder-key
+          SUPABASE_ANON_KEY: placeholder-key
+          ALLOWED_ORIGINS: http://localhost:3000
