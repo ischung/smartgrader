@@ -213,6 +213,12 @@ export default function CourseListPage() {
                 </button>
                 <button
                   className="btn-secondary text-xs px-3 py-1.5"
+                  onClick={() => navigate(`/professor/courses/${c.id}/scores`)}
+                >
+                  성적 관리
+                </button>
+                <button
+                  className="btn-secondary text-xs px-3 py-1.5"
                   onClick={() => setModal({ course: c })}
                 >
                   수정

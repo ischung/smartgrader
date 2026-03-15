@@ -3,6 +3,7 @@ import useAuthStore from '../../store/authStore'
 import CourseListPage from './CourseListPage'
 import GradeUploadPage from './GradeUploadPage'
 import GradeItemPage from './GradeItemPage'
+import GradeManagePage from './GradeManagePage'
 
 export default function ProfessorDashboard() {
   const { clearAuth } = useAuthStore()
@@ -26,6 +27,7 @@ export default function ProfessorDashboard() {
           <Route path="courses" element={<CourseListPage />} />
           <Route path="courses/:courseId/upload" element={<GradeUploadPage />} />
           <Route path="courses/:courseId/items" element={<GradeItemPage />} />
+          <Route path="courses/:courseId/scores" element={<GradeManagePage />} />
         </Routes>
       </main>
     </div>
