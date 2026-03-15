@@ -113,6 +113,7 @@ export default function CourseListPage() {
 
   const [courses, setCourses] = useState([])
   const [loading, setLoading] = useState(true)
+  const [fetchError, setFetchError] = useState(false)
   const [semesterFilter, setSemesterFilter] = useState('all')
   const [modal, setModal] = useState(null)
   const [deleteTarget, setDeleteTarget] = useState(null)
@@ -121,11 +122,13 @@ export default function CourseListPage() {
   const showToast = (message, type = 'success') => setToast({ message, type })
 
   const fetchCourses = useCallback(async () => {
+    setFetchError(false)
+    setLoading(true)
     try {
       const data = await api.get('/api/v1/courses', { token })
-      setCourses(data)
+      setCourses(data ?? [])
     } catch {
-      showToast('과목 목록을 불러오지 못했습니다.', 'error')
+      setFetchError(true)
     } finally {
       setLoading(false)
     }
@@ -182,6 +185,11 @@ export default function CourseListPage() {
 
       {loading ? (
         <div className="card text-center py-12 text-slate-400">불러오는 중...</div>
+      ) : fetchError ? (
+        <div className="card text-center py-12">
+          <p className="text-slate-500 mb-4">과목 목록을 불러오지 못했습니다.</p>
+          <button className="btn-secondary text-sm" onClick={fetchCourses}>다시 시도</button>
+        </div>
       ) : filtered.length === 0 ? (
         <div className="card text-center py-12 text-slate-400">
           {semesterFilter === 'all' ? '등록된 과목이 없습니다.' : '해당 학기 과목이 없습니다.'}

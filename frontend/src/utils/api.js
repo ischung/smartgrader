@@ -48,10 +48,17 @@ async function request(path, options = {}) {
       onWakeUpDone?.()
     }
 
-    // 204 No Content 등 본문 없는 응답 처리
-    const data = res.status === 204 ? null : await res.json()
+    // 204 No Content 등 본문 없는 응답, 또는 비JSON 응답(Render 503 등) 처리
+    let data = null
+    if (res.status !== 204) {
+      const ct = res.headers.get('content-type') || ''
+      if (ct.includes('application/json')) {
+        data = await res.json()
+      }
+    }
     if (!res.ok) {
-      throw new Error(data?.error || `HTTP ${res.status}`)
+      // FastAPI는 {"detail": "..."} 형식으로 에러를 반환
+      throw new Error(data?.detail || data?.error || `HTTP ${res.status}`)
     }
     return data
   } catch (err) {
