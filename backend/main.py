@@ -3,7 +3,7 @@ import os
 from dotenv import load_dotenv
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from routers import auth, courses, files, grade_item_groups, grade_items, grade_policy, scores, users
+from routers import auth, courses, files, grade_item_groups, grade_items, grade_policy, scores, student, users
 
 load_dotenv()
 
@@ -32,6 +32,7 @@ app.include_router(grade_items.router, prefix="/api/v1/courses", tags=["GradeIte
 app.include_router(grade_item_groups.router, prefix="/api/v1/courses", tags=["GradeItemGroups"])
 app.include_router(scores.router, prefix="/api/v1/courses", tags=["Scores"])
 app.include_router(grade_policy.router, prefix="/api/v1/courses", tags=["GradePolicy"])
+app.include_router(student.router, prefix="/api/v1/student", tags=["Student"])
 
 # 이후 이슈에서 순차적으로 추가
 # app.include_router(courses.router, prefix="/api/v1/courses", tags=["Courses"])
