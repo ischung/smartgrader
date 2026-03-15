@@ -48,9 +48,10 @@ async function request(path, options = {}) {
       onWakeUpDone?.()
     }
 
-    const data = await res.json()
+    // 204 No Content 등 본문 없는 응답 처리
+    const data = res.status === 204 ? null : await res.json()
     if (!res.ok) {
-      throw new Error(data.error || `HTTP ${res.status}`)
+      throw new Error(data?.error || `HTTP ${res.status}`)
     }
     return data
   } catch (err) {
