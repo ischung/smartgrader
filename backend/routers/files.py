@@ -80,6 +80,26 @@ async def upload_grade_file(
     }
 
 
+@router.get("/{course_id}/files")
+def list_grade_files(
+    course_id: str,
+    current_user: dict = Depends(professor_or_admin),
+):
+    """과목에 업로드된 파일 목록을 반환한다 (최신순)."""
+    admin = get_admin_client()
+    course = admin.table("courses").select("id").eq("id", course_id).eq("professor_id", current_user["id"]).execute()
+    if not course.data:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="과목을 찾을 수 없습니다.")
+    result = (
+        admin.table("grade_files")
+        .select("id, file_type, storage_path, created_at")
+        .eq("course_id", course_id)
+        .order("created_at", desc=True)
+        .execute()
+    )
+    return result.data or []
+
+
 @router.get("/{course_id}/files/{file_id}/download")
 def download_result_file(
     course_id: str,
