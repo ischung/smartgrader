@@ -1,6 +1,10 @@
 from fastapi import APIRouter, Depends, HTTPException, status
 from models.scores import ScorePatch, ScoreTableResponse, GradeItemInfo, StudentScoreRow, ScoreCell
 from utils.deps import require_role
+from utils.grade_calculator import (
+    ItemInfo, GroupInfo, ScoreCell as CalcCell,
+    validate_weight_sum, calculate_student_total,
+)
 from utils.supabase_client import get_admin_client
 
 router = APIRouter()
@@ -163,3 +167,112 @@ def upsert_score(
         .execute()
     )
     return result.data[0]
+
+
+@router.post("/{course_id}/scores/calculate", status_code=status.HTTP_200_OK)
+def calculate_scores(
+    course_id: str,
+    current_user: dict = Depends(professor_or_admin),
+):
+    """
+    과목의 전체 학생 총점을 계산하여 grade_results 테이블에 저장한다.
+    가중치 합계가 100%가 아니면 400을 반환한다.
+    """
+    admin = get_admin_client()
+    _get_course_or_403(admin, course_id, current_user["id"])
+
+    # 성적 항목 로드
+    items_resp = (
+        admin.table("grade_items")
+        .select("id, item_type, weight, group_id, deduction_per_absence")
+        .eq("course_id", course_id)
+        .execute()
+    )
+    items_data = items_resp.data or []
+
+    # 그룹 로드
+    groups_resp = (
+        admin.table("grade_item_groups")
+        .select("id, weight")
+        .eq("course_id", course_id)
+        .execute()
+    )
+    groups_data = groups_resp.data or []
+
+    items = [
+        ItemInfo(
+            id=i["id"],
+            item_type=i["item_type"],
+            weight=float(i["weight"]) if i.get("weight") is not None else None,
+            group_id=i.get("group_id"),
+            deduction_per_absence=float(i.get("deduction_per_absence") or 0.5),
+        )
+        for i in items_data
+    ]
+    groups = [GroupInfo(id=g["id"], weight=float(g["weight"])) for g in groups_data]
+
+    # 가중치 합계 검증
+    if not validate_weight_sum(items, groups):
+        non_grouped = sum(i.weight for i in items if i.group_id is None and i.weight is not None)
+        group_sum = sum(g.weight for g in groups)
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"가중치 합계가 100%가 아닙니다. 현재: {non_grouped + group_sum:.2f}%",
+        )
+
+    # 점수 로드
+    scores_resp = (
+        admin.table("student_scores")
+        .select("student_id, grade_item_id, raw_score, absence_count")
+        .eq("course_id", course_id)
+        .execute()
+    )
+    all_scores = scores_resp.data or []
+
+    # 학생별 점수 인덱싱
+    student_score_map: dict[str, dict[str, CalcCell]] = {}
+    for row in all_scores:
+        sid = row["student_id"]
+        if sid not in student_score_map:
+            student_score_map[sid] = {}
+        student_score_map[sid][row["grade_item_id"]] = CalcCell(
+            raw_score=row.get("raw_score"),
+            absence_count=row.get("absence_count"),
+        )
+
+    # 학생 정보 로드
+    student_ids = list(student_score_map.keys())
+    if not student_ids:
+        return []
+
+    users_resp = (
+        admin.table("users")
+        .select("id, name, login_id")
+        .in_("id", student_ids)
+        .execute()
+    )
+    users = {u["id"]: u for u in (users_resp.data or [])}
+
+    # 총점 계산 및 grade_results upsert
+    results = []
+    for sid, scores in student_score_map.items():
+        total = calculate_student_total(scores, items, groups)
+        admin.table("grade_results").upsert(
+            {
+                "course_id": course_id,
+                "student_id": sid,
+                "total_score": total,
+                "grade": None,
+            },
+            on_conflict="course_id,student_id",
+        ).execute()
+
+        user = users.get(sid, {})
+        results.append({
+            "student_id": sid,
+            "login_id": user.get("login_id"),
+            "name": user.get("name"),
+            "total_score": total,
+        })
+
+    return sorted(results, key=lambda r: r.get("login_id") or "")
