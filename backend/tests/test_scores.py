@@ -3,7 +3,7 @@
 """
 from fastapi.testclient import TestClient
 from main import app
-from models.scores import ScorePatch, ScoreCell, ScoreTableResponse
+from models.scores import ScorePatch, ScoreCell
 
 client = TestClient(app)
 
