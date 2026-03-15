@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import useAuthStore from '../store/authStore'
+import { api } from '../utils/api'
 
 export default function LoginPage() {
   const [loginId, setLoginId] = useState('')
@@ -16,22 +17,14 @@ export default function LoginPage() {
     setError('')
 
     try {
-      const res = await fetch(`${import.meta.env.VITE_API_URL}/api/v1/auth/login`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ login_id: loginId, password }),
-      })
-
-      if (!res.ok) throw new Error('아이디 또는 비밀번호가 올바르지 않아요.')
-
-      const data = await res.json()
+      const data = await api.post('/api/v1/auth/login', { login_id: loginId, password })
       setAuth(data.user, data.role, data.token)
 
       if (data.role === 'admin') navigate('/admin')
       else if (data.role === 'professor') navigate('/professor')
       else navigate('/student')
-    } catch (err) {
-      setError(`앗, ${err.message}`)
+    } catch {
+      setError('앗, 아이디 또는 비밀번호가 올바르지 않아요.')
     } finally {
       setLoading(false)
     }
